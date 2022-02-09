@@ -5,6 +5,7 @@ const APPKEY = "45e48b44264dc2c0695de8fadbb25f1f";
 const DEFAULTCITY = "Los Angeles";
 let currentCity = DEFAULTCITY;
 let currentUnit = "imperial";
+let theWeather;
 
 class Weather {
     constructor(
@@ -34,7 +35,6 @@ const getweather = async () => {
             `https://api.openweathermap.org/data/2.5/weather?q=${currentCity}&units=${currentUnit}&appid=${APPKEY}`
         );
         const weatherData = await response.json();
-        console.log(weatherData);
         return weatherData;
     } catch (err) {
         console.log(err);
@@ -42,18 +42,17 @@ const getweather = async () => {
 };
 const getCity = () => {
     let city = findCityElement.value;
-    console.log(city);
 
     if (city !== "") {
         currentCity = city;
     } else {
         currentCity = DEFAULTCITY;
     }
-    getweather();
+    setDom();
 };
 
-const setCurrentWeatherData = () => {
-    let weatherData = getweather();
+const setCurrentWeatherData = async () => {
+    let weatherData = await getweather();
     let { humidity, temp } = weatherData.main;
     let units = currentUnit;
     let { deg, speed } = weatherData.wind;
@@ -74,8 +73,30 @@ const setCurrentWeatherData = () => {
 
 findCityElement.addEventListener("keypress", (e) => {
     if (e.key === "Enter") {
-        console.log(e.key);
         getCity();
     }
 });
-getweather();
+
+const setDom = async () => {
+    theWeather = await setCurrentWeatherData();
+    const weatherEL = document.getElementById("current-temp");
+    const tempUnitEl = document.getElementById("temp-unit");
+    const humidityEl = document.getElementById("humidity");
+    const windEl = document.getElementById("wind");
+    const locationEl = document.getElementById("location");
+    const timeEl = document.getElementById("current-time-weather");
+    const conditionEl = document.getElementById("current-condition");
+    const time = new Date(theWeather.time * 1000);
+    const hour = time.getHours();
+    const mins = "0" + time.getMinutes();
+    weatherEL.textContent = theWeather.temp;
+    tempUnitEl.textContent = theWeather.unit;
+    humidityEl.textContent = theWeather.humidity;
+    windEl.textContent = `${theWeather.windSpeed} mph ${theWeather.windDir}`;
+    locationEl.textContent = theWeather.location;
+    timeEl.textContent = `${hour}:${mins.substr(-2)}`;
+    conditionEl.textContent = theWeather.condition;
+    console.log("working");
+};
+
+setDom();
